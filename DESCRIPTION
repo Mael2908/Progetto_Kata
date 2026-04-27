@@ -1,0 +1,25 @@
+Package: generatoreTestMatematica
+Title: Generatore di verifiche di matematica per il liceo
+Version: 0.1.0
+Authors@R: person("Mael", email = "danielev@lerio.ch", role = c("aut", "cre"))
+Description: App R Shiny locale per generare verifiche di matematica personalizzate
+    tramite API Anthropic Claude. Produce due PDF separati: il compito per gli
+    studenti e la griglia di correzione per l'insegnante.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    shiny,
+    bslib,
+    ellmer,
+    jsonlite,
+    quarto,
+    fs,
+    glue,
+    withr,
+    zip
+Suggests:
+    tinytex,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

@@ -1,0 +1,43 @@
+/* Stili custom per il generatore di verifiche */
+
+.esercizio-card {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #fff;
+}
+
+.esercizio-card.approvato {
+  border-left: 4px solid #198754;
+}
+
+.esercizio-card.scartato {
+  opacity: 0.5;
+  border-left: 4px solid #dc3545;
+}
+
+.soluzione-collassabile {
+  background-color: #f8f9fa;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.azioni-esercizio {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.metadata-header {
+  background-color: #e9ecef;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.punti-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+}

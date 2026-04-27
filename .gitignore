@@ -1,0 +1,7 @@
+.Renviron
+output/
+*.pdf
+.Rhistory
+.RData
+*.rds
+.Rproj.user/
