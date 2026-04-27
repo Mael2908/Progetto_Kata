@@ -12,7 +12,6 @@ RoxygenNote: 7.3.2
 Imports:
     shiny,
     bslib,
-    ellmer,
     jsonlite,
     quarto,
     fs,

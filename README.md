@@ -10,7 +10,7 @@ e la griglia di correzione con soluzioni.
 - R >= 4.1 (per la pipe nativa `|>`)
 - [Quarto](https://quarto.org/docs/get-started/) installato sul sistema
 - TinyTeX (installato tramite R, vedi sotto)
-- Una API key Anthropic Claude
+- [Claude Code](https://claude.ai/code) installato e autenticato sul PC (sostituisce la API key)
 
 ## Installazione
 
@@ -18,7 +18,7 @@ e la griglia di correzione con soluzioni.
 
 ```r
 install.packages(c(
-  "shiny", "bslib", "ellmer", "jsonlite",
+  "shiny", "bslib", "jsonlite",
   "quarto", "tinytex", "fs", "glue", "withr",
   "zip", "stringr", "purrr", "readr"
 ))
@@ -32,15 +32,18 @@ tinytex::install_tinytex()
 
 Se hai già una distribuzione LaTeX completa (MiKTeX, TeX Live), puoi saltare questo passo.
 
-### 3. Configura la API key
+### 3. Verifica che il CLI Claude Code sia nel PATH
 
-Copia il file `.Renviron.example` in `.Renviron` nella root del progetto:
+Apri un terminale e digita:
 
 ```
-ANTHROPIC_API_KEY=sk-ant-api03-...la-tua-chiave...
+claude --version
 ```
 
-Poi riavvia R per caricare la variabile d'ambiente.
+Se il comando viene riconosciuto, sei pronto. Altrimenti verifica che Claude Code Desktop
+sia installato e aggiungi la sua cartella al PATH di sistema.
+
+Non serve nessuna API key: l'app usa l'account Claude Code già autenticato sul PC.
 
 ## Avvio dell'app
 

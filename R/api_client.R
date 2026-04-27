@@ -1,31 +1,29 @@
-#' Chiama l'API Anthropic per generare gli esercizi
+#' Chiama Claude tramite il CLI di Claude Code (account esistente)
 #'
 #' @title Chiama API
-#' @description Invia il prompt all'API Anthropic tramite ellmer e restituisce
-#'   la stringa JSON grezza. Implementa retry logic con backoff esponenziale
-#'   e reprompt automatico in caso di JSON malformato.
+#' @description Invia il prompt a Claude tramite il CLI `claude -p`, usando
+#'   l'autenticazione dell'account Claude Code già attivo sul PC. Non richiede
+#'   API key separata. Implementa retry logic con backoff esponenziale e
+#'   reprompt automatico in caso di JSON malformato.
 #' @param user_prompt character(1) Messaggio utente costruito da prompt_builder.R.
 #' @param system_prompt character(1) System prompt (caricato da prompts/sistema.md).
 #'   Se NULL lo carica automaticamente dal file.
 #' @param max_tentativi integer Numero massimo di tentativi totali (default 3).
-#' @param modello character(1) Modello Anthropic da usare (default "claude-sonnet-4-5").
-#' @param temperatura numeric Temperatura per la generazione (default 0.5).
-#' @return character(1) Stringa JSON grezza restituita dall'API.
+#' @return character(1) Stringa JSON grezza restituita da Claude.
 #' @examples
 #' \dontrun{
 #'   json_raw <- chiama_api(
-#'     user_prompt = costruisci_prompt(params),
-#'     system_prompt = readr::read_file("prompts/sistema.md")
+#'     user_prompt = costruisci_prompt(params)
 #'   )
 #' }
 #' @export
 chiama_api <- function(
     user_prompt,
     system_prompt = NULL,
-    max_tentativi = 3,
-    modello       = "claude-sonnet-4-5",
-    temperatura   = 0.5
+    max_tentativi = 3
 ) {
+  .verifica_claude_cli()
+
   if (is.null(system_prompt)) {
     percorso_sistema <- fs::path("prompts", "sistema.md")
     if (!fs::file_exists(percorso_sistema)) {
@@ -34,39 +32,24 @@ chiama_api <- function(
     system_prompt <- readr::read_file(percorso_sistema)
   }
 
-  # Ritardi backoff: 2s, 5s, 10s
   ritardi <- c(2, 5, 10)
 
-  json_raw <- NULL
-  ultimo_errore <- NULL
+  json_raw        <- NULL
+  ultimo_errore   <- NULL
   prompt_corrente <- user_prompt
 
   for (tentativo in seq_len(max_tentativi)) {
-    esito <- tryCatch({
-      chat <- ellmer::chat_anthropic(
-        system  = system_prompt,
-        model   = modello,
-        echo    = "none",
-        api_args = list(temperature = temperatura)
-      )
-      risposta <- chat$chat(prompt_corrente)
-      list(ok = TRUE, testo = risposta)
-    }, error = function(e) {
-      list(ok = FALSE, errore = conditionMessage(e))
-    })
+    esito <- .chiama_claude_cli(prompt_corrente, system_prompt)
 
     if (!esito$ok) {
       ultimo_errore <- esito$errore
-      message(glue::glue("[API] Tentativo {tentativo}/{max_tentativi} fallito: {ultimo_errore}"))
-      if (tentativo < max_tentativi) {
-        Sys.sleep(ritardi[min(tentativo, length(ritardi))])
-      }
+      message(glue::glue("[CLI] Tentativo {tentativo}/{max_tentativi} fallito: {ultimo_errore}"))
+      if (tentativo < max_tentativi) Sys.sleep(ritardi[min(tentativo, length(ritardi))])
       next
     }
 
-    # Verifica che la risposta sia JSON parsabile
     testo_pulito <- .estrai_json(esito$testo)
-    errore_json <- tryCatch({
+    errore_json  <- tryCatch({
       jsonlite::fromJSON(testo_pulito, simplifyDataFrame = FALSE)
       NULL
     }, error = function(e) conditionMessage(e))
@@ -76,9 +59,8 @@ chiama_api <- function(
       break
     }
 
-    # JSON malformato: prepara reprompt
     ultimo_errore <- errore_json
-    message(glue::glue("[API] JSON malformato al tentativo {tentativo}: {errore_json}"))
+    message(glue::glue("[CLI] JSON malformato al tentativo {tentativo}: {errore_json}"))
 
     if (tentativo < max_tentativi) {
       prompt_corrente <- glue::glue(
@@ -93,7 +75,7 @@ chiama_api <- function(
 
   if (is.null(json_raw)) {
     stop(glue::glue(
-      "API non ha restituito JSON valido dopo {max_tentativi} tentativi.\n",
+      "Claude CLI non ha restituito JSON valido dopo {max_tentativi} tentativi.\n",
       "Ultimo errore: {ultimo_errore}"
     ))
   }
@@ -101,28 +83,106 @@ chiama_api <- function(
   json_raw
 }
 
+# --- Funzioni interne ---
+
+#' Esegue una singola chiamata al CLI claude -p
+#'
+#' @param prompt character(1) Testo del prompt (system + user combinati).
+#' @param system_prompt character(1) System prompt da passare con --system-prompt.
+#' @return list con campi \code{ok} (logical) e \code{testo} o \code{errore}.
+#' @keywords internal
+.chiama_claude_cli <- function(prompt, system_prompt) {
+  # Scrive system prompt e user prompt su file temporanei per evitare
+  # problemi con caratteri speciali nella shell
+  file_prompt  <- tempfile(fileext = ".txt")
+  file_system  <- tempfile(fileext = ".txt")
+  on.exit({
+    if (fs::file_exists(file_prompt)) fs::file_delete(file_prompt)
+    if (fs::file_exists(file_system)) fs::file_delete(file_system)
+  }, add = TRUE)
+
+  readr::write_file(prompt,        file_prompt)
+  readr::write_file(system_prompt, file_system)
+
+  stderr_buf <- character(0)
+
+  output <- tryCatch({
+    system2(
+      command = "claude",
+      args    = c(
+        "--print",
+        "--system-prompt", shQuote(system_prompt),
+        "--output-format", "text",
+        shQuote(prompt)
+      ),
+      stdout  = TRUE,
+      stderr  = FALSE,     # stderr va alla console, non lo catturiamo
+      wait    = TRUE
+    )
+  }, error = function(e) {
+    structure(character(0), status = 1L, errmsg = conditionMessage(e))
+  })
+
+  status <- attr(output, "status") %||% 0L
+
+  if (!is.null(attr(output, "errmsg"))) {
+    return(list(ok = FALSE, errore = attr(output, "errmsg")))
+  }
+
+  if (!is.null(status) && status != 0L) {
+    return(list(ok = FALSE, errore = glue::glue("claude CLI uscito con codice {status}")))
+  }
+
+  if (length(output) == 0) {
+    return(list(ok = FALSE, errore = "claude CLI ha restituito output vuoto"))
+  }
+
+  list(ok = TRUE, testo = paste(output, collapse = "\n"))
+}
+
+#' Controlla che il CLI claude sia disponibile nel PATH
+#'
+#' @return invisible(TRUE) o lancia un errore con istruzioni.
+#' @keywords internal
+.verifica_claude_cli <- function() {
+  trovato <- tryCatch({
+    out <- system2("claude", args = "--version", stdout = TRUE, stderr = FALSE)
+    length(out) > 0
+  }, error = function(e) FALSE)
+
+  if (!trovato) {
+    stop(
+      "Il CLI 'claude' non e' stato trovato nel PATH di sistema.\n",
+      "Assicurati che Claude Code Desktop sia installato e che il CLI sia accessibile.\n",
+      "Su Windows puoi verificare aprendo un terminale e digitando: claude --version\n",
+      "Se il comando non viene riconosciuto, aggiungi la cartella di Claude Code al PATH."
+    )
+  }
+
+  invisible(TRUE)
+}
+
 #' Estrae il blocco JSON da una risposta che potrebbe contenere markdown
 #'
-#' @param testo character(1) Risposta grezza dell'API.
+#' @param testo character(1) Risposta grezza del CLI.
 #' @return character(1) Stringa JSON pulita.
 #' @keywords internal
 .estrai_json <- function(testo) {
   testo <- stringr::str_trim(testo)
 
-  # Rimuove eventuali backtick markdown (```json ... ```)
   if (stringr::str_detect(testo, "```")) {
     testo <- stringr::str_extract(testo, "(?s)\\{.*\\}")
     if (is.na(testo)) stop("Impossibile estrarre JSON dalla risposta.")
   }
 
-  # Prende solo il contenuto dall'apertura { alla chiusura }
   inizio <- stringr::str_locate(testo, "\\{")[1, "start"]
   fine   <- stringr::str_locate_all(testo, "\\}")[[1]]
   fine   <- fine[nrow(fine), "end"]
 
-  if (is.na(inizio) || is.na(fine)) {
-    return(testo)
-  }
+  if (is.na(inizio) || is.na(fine)) return(testo)
 
   stringr::str_sub(testo, inizio, fine)
 }
+
+# Operatore %||% per valori di default
+`%||%` <- function(x, y) if (is.null(x)) y else x
