@@ -1,0 +1,75 @@
+---
+title: "Verifica di Matematica"
+format:
+  pdf:
+    documentclass: article
+    geometry: "margin=2.5cm"
+    fontsize: 11pt
+    include-in-header:
+      text: |
+        \usepackage{amsmath, amssymb, amsthm}
+        \usepackage{enumitem}
+        \usepackage{fancyhdr}
+        \usepackage{mdframed}
+        \usepackage{xcolor}
+        \pagestyle{fancy}
+        \fancyhf{}
+        \fancyhead[L]{Verifica di Matematica --- `r params$argomento`}
+        \fancyhead[R]{`r params$classe`}
+        \fancyfoot[C]{\thepage}
+        \renewcommand{\headrulewidth}{0.4pt}
+params:
+  classe: ""
+  data: ""
+  argomento: ""
+  durata_minuti: 60
+  punteggio_totale: 30
+  esercizi_json: "[]"
+---
+
+```{r setup, include=FALSE}
+library(jsonlite)
+library(glue)
+esercizi <- jsonlite::fromJSON(params$esercizi_json, simplifyDataFrame = FALSE)
+```
+
+---
+
+**Nome e Cognome:** \rule{8cm}{0.4pt} \hfill **Classe:** \rule{3cm}{0.4pt}
+
+**Data:** `r params$data` \hfill **Voto:** \rule{3cm}{0.4pt}
+
+---
+
+\begin{mdframed}[backgroundcolor=gray!10, linewidth=0.5pt]
+\textbf{Istruzioni} \quad
+Argomento: \textit{`r params$argomento`} \quad
+Durata: \textbf{`r params$durata_minuti` minuti} \quad
+Punteggio totale: \textbf{`r params$punteggio_totale` punti}
+
+Giustifica tutti i passaggi. Le risposte senza svolgimento non saranno valutate.
+\end{mdframed}
+
+\vspace{0.5cm}
+
+```{r esercizi, results='asis', echo=FALSE}
+for (i in seq_along(esercizi)) {
+  ez <- esercizi[[i]]
+  spazio <- max(2, min(12, ez$punti * 1.5))
+
+  cat(glue::glue(
+    "\\subsection*{{Esercizio {i} --- {ez$titolo_breve} \\hfill [{ez$punti} pt]}}\n\n"
+  ))
+  cat(ez$testo, "\n\n")
+  cat(glue::glue("\\vspace{{{spazio}cm}}\n\n"))
+
+  if (i < length(esercizi)) {
+    cat("\\hrule\\vspace{0.3cm}\n\n")
+  }
+}
+```
+
+\vspace{1cm}
+\begin{center}
+\textit{Fine della verifica. Buon lavoro!}
+\end{center}
