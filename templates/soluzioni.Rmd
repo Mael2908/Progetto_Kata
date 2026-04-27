@@ -1,24 +1,17 @@
 ---
 title: "Griglia di correzione — USO INTERNO"
-format:
-  pdf:
-    documentclass: article
-    geometry: "margin=2.5cm"
-    fontsize: 11pt
-    include-in-header:
-      text: |
-        \usepackage{amsmath, amssymb, amsthm}
-        \usepackage{enumitem}
-        \usepackage{fancyhdr}
-        \usepackage{mdframed}
-        \usepackage{xcolor}
-        \usepackage{soul}
-        \pagestyle{fancy}
-        \fancyhf{}
-        \fancyhead[L]{Griglia di correzione --- `r params$argomento`}
-        \fancyhead[R]{\textcolor{red}{USO INTERNO}}
-        \fancyfoot[C]{\thepage}
-        \renewcommand{\headrulewidth}{0.4pt}
+output:
+  pdf_document:
+    latex_engine: pdflatex
+    keep_tex: false
+geometry: "margin=2.5cm"
+fontsize: 11pt
+header-includes:
+  - \usepackage{amsmath, amssymb, amsthm}
+  - \usepackage{enumitem}
+  - \usepackage{fancyhdr}
+  - \usepackage{mdframed}
+  - \usepackage{xcolor}
 params:
   classe: ""
   data: ""
@@ -32,6 +25,13 @@ params:
 library(jsonlite)
 library(glue)
 esercizi <- jsonlite::fromJSON(params$esercizi_json, simplifyDataFrame = FALSE)
+```
+
+```{r intestazione-header, echo=FALSE, results='asis'}
+cat(sprintf(
+  "\\pagestyle{fancy}\n\\fancyhf{}\n\\fancyhead[L]{Griglia di correzione --- %s}\n\\fancyhead[R]{\\textcolor{red}{USO INTERNO}}\n\\fancyfoot[C]{\\thepage}\n\\renewcommand{\\headrulewidth}{0.4pt}\n",
+  params$argomento
+))
 ```
 
 \begin{center}
@@ -53,17 +53,14 @@ for (i in seq_along(esercizi)) {
     "\\subsection*{{Esercizio {i} --- {ez$titolo_breve} \\hfill [{ez$punti} pt]}}\n\n"
   ))
 
-  # Testo originale in corsivo/grigio
   cat("\\begin{mdframed}[backgroundcolor=gray!5, linewidth=0.3pt]\n")
   cat("\\textit{", ez$testo, "}\n", sep = "")
   cat("\\end{mdframed}\n\n")
 
-  # Soluzione finale in evidenza
   cat("\\begin{mdframed}[backgroundcolor=green!8, linewidth=0.5pt]\n")
   cat("\\textbf{Soluzione:} ", ez$soluzione_finale, "\n", sep = "")
   cat("\\end{mdframed}\n\n")
 
-  # Passaggi numerati
   if (length(ez$passaggi) > 0) {
     cat("\\textbf{Svolgimento:}\n\\begin{enumerate}[leftmargin=*, label=\\arabic*.]\n")
     for (p in ez$passaggi) {
@@ -72,7 +69,6 @@ for (i in seq_along(esercizi)) {
     cat("\\end{enumerate}\n\n")
   }
 
-  # Suggerimento se presente
   if (!is.null(ez$suggerimento) && nchar(ez$suggerimento) > 0) {
     cat("\\textit{\\small Suggerimento: ", ez$suggerimento, "}\n\n", sep = "")
   }

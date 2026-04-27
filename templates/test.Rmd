@@ -1,23 +1,17 @@
 ---
 title: "Verifica di Matematica"
-format:
-  pdf:
-    documentclass: article
-    geometry: "margin=2.5cm"
-    fontsize: 11pt
-    include-in-header:
-      text: |
-        \usepackage{amsmath, amssymb, amsthm}
-        \usepackage{enumitem}
-        \usepackage{fancyhdr}
-        \usepackage{mdframed}
-        \usepackage{xcolor}
-        \pagestyle{fancy}
-        \fancyhf{}
-        \fancyhead[L]{Verifica di Matematica --- `r params$argomento`}
-        \fancyhead[R]{`r params$classe`}
-        \fancyfoot[C]{\thepage}
-        \renewcommand{\headrulewidth}{0.4pt}
+output:
+  pdf_document:
+    latex_engine: pdflatex
+    keep_tex: false
+geometry: "margin=2.5cm"
+fontsize: 11pt
+header-includes:
+  - \usepackage{amsmath, amssymb, amsthm}
+  - \usepackage{enumitem}
+  - \usepackage{fancyhdr}
+  - \usepackage{mdframed}
+  - \usepackage{xcolor}
 params:
   classe: ""
   data: ""
@@ -31,6 +25,13 @@ params:
 library(jsonlite)
 library(glue)
 esercizi <- jsonlite::fromJSON(params$esercizi_json, simplifyDataFrame = FALSE)
+```
+
+```{r intestazione-header, echo=FALSE, results='asis'}
+cat(sprintf(
+  "\\pagestyle{fancy}\n\\fancyhf{}\n\\fancyhead[L]{Verifica di Matematica --- %s}\n\\fancyhead[R]{%s}\n\\fancyfoot[C]{\\thepage}\n\\renewcommand{\\headrulewidth}{0.4pt}\n",
+  params$argomento, params$classe
+))
 ```
 
 ---

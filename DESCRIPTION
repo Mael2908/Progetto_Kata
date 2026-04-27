@@ -13,10 +13,9 @@ Imports:
     shiny,
     bslib,
     jsonlite,
-    quarto,
+    rmarkdown,
     fs,
     glue,
-    withr,
     zip
 Suggests:
     tinytex,

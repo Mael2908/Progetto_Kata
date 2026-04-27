@@ -3,19 +3,12 @@
 # Oppure in RStudio con Ctrl+Shift+Enter
 
 # --- Verifica pacchetti e dipendenze esterne ---
-pacchetti_richiesti <- c("stringr", "glue", "jsonlite", "fs", "withr", "purrr", "readr", "quarto")
+pacchetti_richiesti <- c("stringr", "glue", "jsonlite", "fs", "withr", "purrr", "readr", "rmarkdown")
 mancanti <- pacchetti_richiesti[!sapply(pacchetti_richiesti, requireNamespace, quietly = TRUE)]
 if (length(mancanti) > 0) {
   stop(
     "Pacchetti R mancanti: ", paste(mancanti, collapse = ", "), "\n",
     "Installa con: install.packages(c(", paste0('"', mancanti, '"', collapse = ", "), "))"
-  )
-}
-
-if (!nzchar(Sys.which("quarto"))) {
-  stop(
-    "Il CLI Quarto non e' installato o non e' nel PATH.\n",
-    "Scaricalo da: https://quarto.org/docs/get-started/"
   )
 }
 
