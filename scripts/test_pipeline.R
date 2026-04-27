@@ -2,6 +2,27 @@
 # Eseguire dalla root del progetto: source("scripts/test_pipeline.R")
 # Oppure in RStudio con Ctrl+Shift+Enter
 
+# --- Verifica pacchetti e dipendenze esterne ---
+pacchetti_richiesti <- c("stringr", "glue", "jsonlite", "fs", "withr", "purrr", "readr", "quarto")
+mancanti <- pacchetti_richiesti[!sapply(pacchetti_richiesti, requireNamespace, quietly = TRUE)]
+if (length(mancanti) > 0) {
+  stop(
+    "Pacchetti R mancanti: ", paste(mancanti, collapse = ", "), "\n",
+    "Installa con: install.packages(c(", paste0('"', mancanti, '"', collapse = ", "), "))"
+  )
+}
+
+if (!nzchar(Sys.which("quarto"))) {
+  stop(
+    "Il CLI Quarto non e' installato o non e' nel PATH.\n",
+    "Scaricalo da: https://quarto.org/docs/get-started/"
+  )
+}
+
+if (!nzchar(Sys.which("claude"))) {
+  stop("Il CLI claude non e' nel PATH. Assicurati che Claude Code Desktop sia installato.")
+}
+
 # --- Carica moduli ---
 source("R/utils.R")
 source("R/prompt_builder.R")
