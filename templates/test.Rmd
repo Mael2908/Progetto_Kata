@@ -8,10 +8,9 @@ geometry: "margin=2.5cm"
 fontsize: 11pt
 header-includes:
   - \usepackage{amsmath, amssymb, amsthm}
-  - \usepackage{enumitem}
   - \usepackage{fancyhdr}
-  - \usepackage{mdframed}
   - \usepackage{xcolor}
+  - \usepackage{framed}
 params:
   classe: ""
   data: ""
@@ -27,9 +26,9 @@ library(glue)
 esercizi <- jsonlite::fromJSON(params$esercizi_json, simplifyDataFrame = FALSE)
 ```
 
-```{r intestazione-header, echo=FALSE, results='asis'}
+```{r header-setup, echo=FALSE, results='asis'}
 cat(sprintf(
-  "\\pagestyle{fancy}\n\\fancyhf{}\n\\fancyhead[L]{Verifica di Matematica --- %s}\n\\fancyhead[R]{%s}\n\\fancyfoot[C]{\\thepage}\n\\renewcommand{\\headrulewidth}{0.4pt}\n",
+  "\\pagestyle{fancy}\n\\fancyhf{}\n\\fancyhead[L]{Verifica --- %s}\n\\fancyhead[R]{%s}\n\\fancyfoot[C]{\\thepage}\n\\renewcommand{\\headrulewidth}{0.4pt}\n",
   params$argomento, params$classe
 ))
 ```
@@ -42,14 +41,14 @@ cat(sprintf(
 
 ---
 
-\begin{mdframed}[backgroundcolor=gray!10, linewidth=0.5pt]
-\textbf{Istruzioni} \quad
+\begin{framed}
+\noindent\textbf{Istruzioni} \quad
 Argomento: \textit{`r params$argomento`} \quad
-Durata: \textbf{`r params$durata_minuti` minuti} \quad
-Punteggio totale: \textbf{`r params$punteggio_totale` punti}
+Durata: \textbf{`r params$durata_minuti` min} \quad
+Punteggio: \textbf{`r params$punteggio_totale` pt}
 
-Giustifica tutti i passaggi. Le risposte senza svolgimento non saranno valutate.
-\end{mdframed}
+\noindent Giustifica tutti i passaggi. Le risposte senza svolgimento non saranno valutate.
+\end{framed}
 
 \vspace{0.5cm}
 
@@ -65,7 +64,7 @@ for (i in seq_along(esercizi)) {
   cat(glue::glue("\\vspace{{{spazio}cm}}\n\n"))
 
   if (i < length(esercizi)) {
-    cat("\\hrule\\vspace{0.3cm}\n\n")
+    cat("\\noindent\\rule{\\textwidth}{0.3pt}\\vspace{0.3cm}\n\n")
   }
 }
 ```

@@ -8,10 +8,9 @@ geometry: "margin=2.5cm"
 fontsize: 11pt
 header-includes:
   - \usepackage{amsmath, amssymb, amsthm}
-  - \usepackage{enumitem}
   - \usepackage{fancyhdr}
-  - \usepackage{mdframed}
   - \usepackage{xcolor}
+  - \usepackage{framed}
 params:
   classe: ""
   data: ""
@@ -27,7 +26,7 @@ library(glue)
 esercizi <- jsonlite::fromJSON(params$esercizi_json, simplifyDataFrame = FALSE)
 ```
 
-```{r intestazione-header, echo=FALSE, results='asis'}
+```{r header-setup, echo=FALSE, results='asis'}
 cat(sprintf(
   "\\pagestyle{fancy}\n\\fancyhf{}\n\\fancyhead[L]{Griglia di correzione --- %s}\n\\fancyhead[R]{\\textcolor{red}{USO INTERNO}}\n\\fancyfoot[C]{\\thepage}\n\\renewcommand{\\headrulewidth}{0.4pt}\n",
   params$argomento
@@ -38,7 +37,7 @@ cat(sprintf(
 {\large \textbf{Griglia di correzione}}\\[0.3cm]
 Argomento: \textit{`r params$argomento`} \quad
 Classe: \textbf{`r params$classe`} \quad
-Data: `r params$data`\\
+Data: `r params$data`\\[0.2cm]
 Punteggio totale: \textbf{`r params$punteggio_totale` punti} \quad
 Durata: `r params$durata_minuti` minuti
 \end{center}
@@ -53,28 +52,32 @@ for (i in seq_along(esercizi)) {
     "\\subsection*{{Esercizio {i} --- {ez$titolo_breve} \\hfill [{ez$punti} pt]}}\n\n"
   ))
 
-  cat("\\begin{mdframed}[backgroundcolor=gray!5, linewidth=0.3pt]\n")
-  cat("\\textit{", ez$testo, "}\n", sep = "")
-  cat("\\end{mdframed}\n\n")
+  # Testo originale
+  cat("\\begin{framed}\n\\textit{")
+  cat(ez$testo)
+  cat("}\n\\end{framed}\n\n")
 
-  cat("\\begin{mdframed}[backgroundcolor=green!8, linewidth=0.5pt]\n")
-  cat("\\textbf{Soluzione:} ", ez$soluzione_finale, "\n", sep = "")
-  cat("\\end{mdframed}\n\n")
+  # Soluzione in evidenza
+  cat("\\noindent\\textbf{Soluzione:} ")
+  cat(ez$soluzione_finale)
+  cat("\n\n")
 
+  # Passaggi
   if (length(ez$passaggi) > 0) {
-    cat("\\textbf{Svolgimento:}\n\\begin{enumerate}[leftmargin=*, label=\\arabic*.]\n")
+    cat("\\textbf{Svolgimento:}\n\\begin{enumerate}\n")
     for (p in ez$passaggi) {
       cat("  \\item ", p, "\n", sep = "")
     }
     cat("\\end{enumerate}\n\n")
   }
 
+  # Suggerimento
   if (!is.null(ez$suggerimento) && nchar(ez$suggerimento) > 0) {
     cat("\\textit{\\small Suggerimento: ", ez$suggerimento, "}\n\n", sep = "")
   }
 
   if (i < length(esercizi)) {
-    cat("\\hrule\\vspace{0.5cm}\n\n")
+    cat("\\noindent\\rule{\\textwidth}{0.4pt}\\vspace{0.5cm}\n\n")
   }
 }
 ```
