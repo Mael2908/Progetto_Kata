@@ -5,3 +5,6 @@ output/
 .RData
 *.rds
 .Rproj.user/
+.positai
+data/
+.claude/settings.local.json

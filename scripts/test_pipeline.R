@@ -18,14 +18,6 @@ library(withr)
 library(purrr)
 library(readr)
 
-# --- Verifica API key ---
-if (!nchar(Sys.getenv("ANTHROPIC_API_KEY"))) {
-  stop(
-    "ANTHROPIC_API_KEY non impostata.\n",
-    "Crea .Renviron nella root con ANTHROPIC_API_KEY=sk-ant-... e riavvia R."
-  )
-}
-
 # --- Parametri hard-coded per il test ---
 params_test <- list(
   argomento         = "Integrali",
