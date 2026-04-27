@@ -4,6 +4,7 @@ output:
   pdf_document:
     latex_engine: pdflatex
     keep_tex: false
+    highlight: null
 geometry: "margin=2.5cm"
 fontsize: 11pt
 header-includes:
@@ -11,6 +12,7 @@ header-includes:
   - \usepackage{fancyhdr}
   - \usepackage{xcolor}
   - \usepackage{framed}
+  - \setlength{\headheight}{14pt}
 params:
   classe: ""
   data: ""
