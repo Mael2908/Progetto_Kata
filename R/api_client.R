@@ -85,38 +85,32 @@ chiama_api <- function(
 
 # --- Funzioni interne ---
 
-#' Esegue una singola chiamata al CLI claude -p
+#' Esegue una singola chiamata al CLI claude --print
 #'
-#' @param prompt character(1) Testo del prompt (system + user combinati).
-#' @param system_prompt character(1) System prompt da passare con --system-prompt.
+#' @description Combina system prompt e user prompt in un unico messaggio e
+#'   lo passa via stdin a `claude --print`. Il CLI non ha un flag
+#'   --system-prompt, quindi le istruzioni vengono iniettate nel testo.
+#' @param prompt character(1) User prompt.
+#' @param system_prompt character(1) System prompt (istruzioni di ruolo).
 #' @return list con campi \code{ok} (logical) e \code{testo} o \code{errore}.
 #' @keywords internal
 .chiama_claude_cli <- function(prompt, system_prompt) {
-  # Scrive system prompt e user prompt su file temporanei per evitare
-  # problemi con caratteri speciali nella shell
-  file_prompt  <- tempfile(fileext = ".txt")
-  file_system  <- tempfile(fileext = ".txt")
-  on.exit({
-    if (fs::file_exists(file_prompt)) fs::file_delete(file_prompt)
-    if (fs::file_exists(file_system)) fs::file_delete(file_system)
-  }, add = TRUE)
-
-  readr::write_file(prompt,        file_prompt)
-  readr::write_file(system_prompt, file_system)
-
-  stderr_buf <- character(0)
+  # Combina system prompt e user prompt in un unico testo da passare via stdin.
+  # Il CLI legge da stdin quando non riceve argomenti di testo.
+  testo_completo <- paste0(
+    "=== ISTRUZIONI DI SISTEMA (segui scrupolosamente) ===\n",
+    system_prompt,
+    "\n\n=== RICHIESTA ===\n",
+    prompt
+  )
 
   output <- tryCatch({
     system2(
       command = "claude",
-      args    = c(
-        "--print",
-        "--system-prompt", shQuote(system_prompt),
-        "--output-format", "text",
-        shQuote(prompt)
-      ),
+      args    = c("--print", "--output-format", "text"),
+      input   = testo_completo,   # passato via stdin, evita limiti riga di comando
       stdout  = TRUE,
-      stderr  = FALSE,     # stderr va alla console, non lo catturiamo
+      stderr  = FALSE,
       wait    = TRUE
     )
   }, error = function(e) {
