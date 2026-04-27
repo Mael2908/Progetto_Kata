@@ -8,3 +8,5 @@ output/
 .positai
 data/
 .claude/settings.local.json
+templates/*.log
+templates/*.tex
